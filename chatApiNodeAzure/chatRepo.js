@@ -78,6 +78,7 @@ module.exports = function () {
 
     this.filterRecordsAsJson = function (entries, recordCount) {
         recordCount = Number.isInteger(recordCount) && (recordCount > 0 || recordCount <= 10) ? recordCount : 10;
+        if (entries.length < recordCount) recordCount = entries.length;
         let jsonArray = [];
         for (let i = 0; i < recordCount; i++)
             jsonArray.unshift(this.parseRecordToJson(entries[i]));
