@@ -108,7 +108,7 @@ module.exports = function () {
     this.updateOrReplaceRecord = function (entity) {
         return new Promise(function (res, rej) {
             storageClient.insertOrReplaceEntity(config.storageTable, entity, function (error, result, response) {
-                if (!error) res(entity.RowKey);
+                if (!error) res(entity.Id);
                 rej();
             }.bind(this));
         }.bind(this));
