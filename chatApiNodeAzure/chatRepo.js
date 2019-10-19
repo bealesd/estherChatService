@@ -42,7 +42,7 @@ module.exports = function () {
     this.getChatRecordsAfterId = function (lastId) {
         return new Promise(function (res, rej) {
             if (this.isNullString(lastId)) return rej("chatRepo: no id provided");
-            let query = this.getRecordsByTimePassedQuery((new storage.TableQuery()), 10);
+            let query = new storage.TableQuery().top(10);
             storageClient.queryEntities(config.storageTable, query, null, function (error, result, response) {
                 if (error) return rej();
                 return res(this.getRecordsAfterId(result.entries, lastId));
@@ -50,7 +50,6 @@ module.exports = function () {
         }.bind(this));
     };
 
-    // add to generic helper for use in other work
     this.isNullString = function (value) {
         return value === null || value === undefined || value === "";
     };
@@ -59,10 +58,6 @@ module.exports = function () {
         return array === null || array === undefined || array === [] || array.length === 0;
     };
 
-    this.getRecordsByTimePassedQuery = function (query, minutesPassed) {
-        const timePassedTicks = this.getMaxTimeTicks() - (new Date()).setMinutes((new Date()).getMinutes() - minutesPassed);
-        return query.where(`RowKey lt '${timePassedTicks}'`);
-    };
 
     this.getRecordsAfterId = function (entries, id) {
         jsonArray = [];
@@ -70,8 +65,8 @@ module.exports = function () {
         let storeRecord = false;
         for (let i = entries.length - 1; i >= 0; i--) {
             let entry = entries[i];
-            if (storeRecord) jsonArray.push(this.parseRecordToJson(entry));
             if (entry['Id']._ === id) storeRecord = true;
+            if (storeRecord) jsonArray.push(this.parseRecordToJson(entry));
         }
         return jsonArray;
     };
