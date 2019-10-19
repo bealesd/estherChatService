@@ -65,8 +65,8 @@ module.exports = function () {
         let storeRecord = false;
         for (let i = entries.length - 1; i >= 0; i--) {
             let entry = entries[i];
-            if (entry['Id']._ === id) storeRecord = true;
             if (storeRecord) jsonArray.push(this.parseRecordToJson(entry));
+            if (entry['Id']._ === id) storeRecord = true;
         }
         return jsonArray;
     };
@@ -102,7 +102,12 @@ module.exports = function () {
             Content: message,
             Datetime: ticks
         };
-        return this.updateOrReplaceRecord(entity);
+        return new Promise(function (res, rej) {
+            storageClient.insertOrReplaceEntity(config.storageTable, entity, function (error, result, response) {
+                if (!error) res(entity);
+                rej();
+            }.bind(this));
+        }.bind(this));
     };
 
     this.updateOrReplaceRecord = function (entity) {
