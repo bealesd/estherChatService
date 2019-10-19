@@ -48,7 +48,7 @@ app.post('/postMessage', function (request, response) {
     let who = request.body.Username;
     chatRepo.addChatRecord(message, who)
     .then((result) => {
-        return response.status(201).send(`Message posted: ${result}`);
+        return response.status(201).json(result);
     })
     .catch((err) => {
         console.error(err.stack);
