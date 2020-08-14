@@ -455,3 +455,4 @@ MigrationBackup/
 .ionide/
 
 *config.json
+package-lock.json
