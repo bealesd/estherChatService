@@ -83,11 +83,11 @@ module.exports = function() {
 
     this.parseRecordToJson = function(entry) {
         return {
-            id: entry.Id._,
-            who: entry.Who._,
-            datetime: entry.Datetime._,
-            content: entry.Content._,
-            rowKey: entry.RowKey._
+            Id: entry.Id._,
+            Who: entry.Who._,
+            Datetime: entry.Datetime._,
+            Content: entry.Content._,
+            RowKey: entry.RowKey._
         };
     };
 
