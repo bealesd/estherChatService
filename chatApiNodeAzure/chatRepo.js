@@ -96,12 +96,16 @@ module.exports = function() {
     };
 
     this.parseRecordToJson = function(entry) {
+        let deleted = 'false';
+        if (entry.hasOwnProperty('Deleted'))
+            deleted = entry.Deleted._;
         return {
             Id: entry.Id._,
             Who: entry.Who._,
             Datetime: entry.Datetime._,
             Content: entry.Content._,
-            RowKey: entry.RowKey._
+            RowKey: entry.RowKey._,
+            Deleted: deleted
         };
     };
 
@@ -116,7 +120,8 @@ module.exports = function() {
             Id: id,
             Who: who,
             Content: message,
-            Datetime: ticks
+            Datetime: ticks,
+            Deleted: 'false'
         };
         return new Promise(function(res, rej) {
             storageClient.insertOrReplaceEntity(config.storageTable, entity, function(error, result, response) {
@@ -131,9 +136,7 @@ module.exports = function() {
             this.getRecordByRowKey(rowKey).then((retrievedEntity) => {
                 retrievedEntity.Content = message;
                 storageClient.insertOrReplaceEntity(config.storageTable, retrievedEntity, function entitiesQueried(error, result) {
-                    if (error) {
-                        rej();
-                    }
+                    if (error) rej();
                     res(rowKey);
                 });
             });
@@ -141,16 +144,27 @@ module.exports = function() {
     }
 
     this.deleteChatRecord = function(rowKey) {
-        return new Promise(function(res, rej) {
-            this.getRecordByRowKey(rowKey).then(function(retrievedEntity) {
-                storageClient.deleteEntity(config.storageTable, retrievedEntity, function entitiesQueried(error, result) {
-                    if (error) {
-                        rej();
-                    }
+        return new Promise((res, rej) => {
+            this.getRecordByRowKey(rowKey).then((retrievedEntity) => {
+                retrievedEntity.Deleted = 'true';
+                storageClient.insertOrReplaceEntity(config.storageTable, retrievedEntity, function entitiesQueried(error, result) {
+                    if (error) rej();
                     res(rowKey);
                 });
-            }.bind(this));
-        }.bind(this));
+            });
+        });
+    }
+
+    this.deleteChatRecordOld = function(rowKey) {
+        return new Promise((res, rej) => {
+            this.getRecordByRowKey(rowKey).then((retrievedEntity) => {
+                retrievedEntity.Deleted = 'true';
+                storageClient.deleteEntity(config.storageTable, retrievedEntity, function entitiesQueried(error, result) {
+                    if (error) rej();
+                    res(rowKey);
+                });
+            });
+        });
     }
 
     this.getRecordByRowKey = function(rowKey) {
