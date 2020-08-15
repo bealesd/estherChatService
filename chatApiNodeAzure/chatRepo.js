@@ -1,6 +1,7 @@
 const uuidv1 = require('uuid/v1');
 const storage = require('azure-storage');
 const config = require('./config.js');
+
 let storageClient;
 
 module.exports = function() {
@@ -28,10 +29,10 @@ module.exports = function() {
 
     this.getRecords = function(recordCount) {
         return new Promise(function(res, rej) {
-            let query = new storage.TableQuery().top(10);
+            const query = new storage.TableQuery().top(10);
             storageClient.queryEntities(config.storageTable, query, null, function(error, result, response) {
                 if (error) rej("chatRepo: get records failed");
-                let jsonRecords = this.filterRecordsAsJson(result.entries, recordCount);
+                const jsonRecords = this.filterRecordsAsJson(result.entries, recordCount);
                 console.log(`\nGetting all chat records: ${jsonRecords.length}`);
 
                 res(jsonRecords);
@@ -39,16 +40,29 @@ module.exports = function() {
         }.bind(this));
     };
 
+    // deprecated
     this.getChatRecordsAfterId = function(lastId) {
-        // does not work well, need to pass in timestamp for the partition and row key, then query on that
         return new Promise(function(res, rej) {
             if (this.isNullString(lastId)) return rej("chatRepo: no id provided");
-            let query = new storage.TableQuery().top(10);
+            const query = new storage.TableQuery().top(10);
             storageClient.queryEntities(config.storageTable, query, null, function(error, result, response) {
                 if (error) return rej();
                 return res(this.getRecordsAfterId(result.entries, lastId));
             }.bind(this));
         }.bind(this));
+    };
+
+    this.getChatRecordsAfterRowKey = function(rowKey) {
+        return new Promise((res, rej) => {
+            if (this.isNullString(rowKey)) return rej("chatRepo: no rowKey provided");
+            this.getRecordByRowKey(rowKey).then((retrievedEntity) => {
+                const query = new storage.TableQuery().where('Timestamp >= ?', retrievedEntity.Timestamp._);
+                storageClient.queryEntities(config.storageTable, query, null, (error, result, response) => {
+                    if (error) return rej();
+                    return res(this.getRecordsAfterId(result.entries, retrievedEntity.Id._));
+                });
+            });
+        });
     };
 
     this.isNullString = function(value) {
@@ -65,7 +79,7 @@ module.exports = function() {
         if (this.isEmptyArray(entries)) return jsonArray;
         let storeRecord = false;
         for (let i = entries.length - 1; i >= 0; i--) {
-            let entry = entries[i];
+            const entry = entries[i];
             if (storeRecord) jsonArray.push(this.parseRecordToJson(entry));
             if (entry['Id']._ === id) storeRecord = true;
         }
@@ -75,7 +89,7 @@ module.exports = function() {
     this.filterRecordsAsJson = function(entries, recordCount) {
         recordCount = Number.isInteger(recordCount) && (recordCount > 0 || recordCount <= 10) ? recordCount : 10;
         if (entries.length < recordCount) recordCount = entries.length;
-        let jsonArray = [];
+        const jsonArray = [];
         for (let i = 0; i < recordCount; i++)
             jsonArray.unshift(this.parseRecordToJson(entries[i]));
         return jsonArray;

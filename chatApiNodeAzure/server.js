@@ -1,15 +1,15 @@
 'use strict';
-var cr = require('./chatRepo');
-var chatRepo = new cr();
+const cr = require('./chatRepo');
+const chatRepo = new cr();
 chatRepo.setup();
 
-var port = process.env.PORT || 1337;
+const port = process.env.PORT || 1337;
 console.log(`Listening on ${port}.`);
-var express = require('express');
-var app = express();
+const express = require('express');
+const app = express();
 
 
-var allowCrossDomain = function(request, response, next) {
+const allowCrossDomain = function(request, response, next) {
     response.header('Access-Control-Allow-Origin', '*');
     response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     response.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -31,9 +31,22 @@ app.get('/getMessages', function(request, response) {
         });
 });
 
+// deprecated api
 app.get('/GeNewMessages', function(request, response) {
     const lastId = request.query.lastId;
     chatRepo.getChatRecordsAfterId(lastId)
+        .then((result) => {
+            return response.status(201).json(result);
+        })
+        .catch((err) => {
+            console.error(err);
+            return response.status(400).send('Get messages request failed.');
+        });
+});
+
+app.get('/getMessagesAfterRowKey', function(request, response) {
+    const rowKey = request.query.rowKey;
+    chatRepo.getChatRecordsAfterRowKey(rowKey)
         .then((result) => {
             return response.status(201).json(result);
         })
@@ -81,8 +94,8 @@ app.delete('/deleteMessage', function(request, response) {
         });
 });
 
-var server = app.listen(port, function() {
-    var host = server.address().address;
-    var port = server.address().port;
+const server = app.listen(port, function() {
+    const host = server.address().address;
+    const port = server.address().port;
     console.log("Example app listening at http://%s:%s", host, port);
 });
