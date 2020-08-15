@@ -176,6 +176,15 @@ module.exports = function() {
         }.bind(this));
     }
 
+    this.getRecordByRowKeyParsed = function(rowKey) {
+        return new Promise((res, rej) => {
+            this.getRecordByRowKey(rowKey).then((retrievedEntity) => {
+                const parsedRecord = this.parseRecordToJson(retrievedEntity);
+                res(parsedRecord);
+            });
+        });
+    }
+
     this.getMaxTimeTicks = function() {
         return (new Date(9999, 12, 31, 23, 59, 59, 9999999)).getTime();
     };

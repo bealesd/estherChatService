@@ -56,6 +56,18 @@ app.get('/getMessagesAfterRowKey', function(request, response) {
         });
 });
 
+app.get('/getMessage', function(request, response) {
+    const rowKey = request.query.rowKey;
+    chatRepo.getRecordByRowKeyParsed(rowKey)
+        .then((result) => {
+            return response.status(201).json(result);
+        })
+        .catch((err) => {
+            console.error(err);
+            return response.status(400).send('Get messages request failed.');
+        });
+});
+
 app.post('/postMessage', function(request, response) {
     const message = request.body.Message;
     const who = request.body.Username;
